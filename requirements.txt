@@ -1,0 +1,13 @@
+clickhouse-connect>=0.14.0
+clickhouse-driver>=0.2.0
+requests>=2.31.0
+openai>=1.50.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.4.0
+python-dotenv>=1.0.0
+pyyaml>=6.0
+numpy>=1.24.0
+pandas>=2.0.0
+qdrant-client>=1.7.0
+sentence-transformers>=2.7.0

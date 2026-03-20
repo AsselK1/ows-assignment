@@ -1,0 +1,73 @@
+# Kazakhstan Procurement Agent Configuration
+
+# Organization BINs (27 organizations)
+organizations:
+  bins:
+    - '000740001307'
+    - '020240002363'
+    - '020440003656'
+    - '030440003698'
+    - '050740004819'
+    - '051040005150'
+    - '100140011059'
+    - '120940001946'
+    - '140340016539'
+    - '150540000186'
+    - '171041003124'
+    - '210240019348'
+    - '210240033968'
+    - '210941010761'
+    - '230740013340'
+    - '231040023028'
+    - '780140000023'
+    - '900640000128'
+    - '940740000911'
+    - '940940000384'
+    - '960440000220'
+    - '970940001378'
+    - '971040001050'
+    - '980440001034'
+    - '981140001551'
+    - '990340005977'
+    - '990740002243'
+
+# Data Configuration
+data:
+  date_range:
+    start: 2024-01-01
+    end: 2026-12-31
+  min_sample_size: 5
+
+# Anomaly Detection Settings
+anomaly:
+  threshold: 0.30  # 30% deviation
+  method: weighted_average_by_enstr
+  confidence_level: 0.95
+
+# API Configuration
+api:
+  host: 0.0.0.0
+  port: 8000
+  workers: 4
+
+# Database Configuration
+database:
+  clickhouse:
+    host: localhost
+    port: 9440
+    database: procurement
+    timeout: 30
+    compression: lz4
+
+# LLM Configuration
+llm:
+  provider: nitec-ai
+  model: openai/gpt-oss-120b
+  temperature: 0.7
+  max_tokens: 2000
+
+# Logging
+logging:
+  level: INFO
+  format: json
+  output: console

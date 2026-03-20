@@ -1,0 +1,117 @@
+version: '3.9'
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.1.5
+    container_name: clickhouse-server
+    restart: unless-stopped
+    
+    # Memory limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 2G
+    
+    # Ports
+    ports:
+      - "127.0.0.1:8123:8123"  # HTTP interface
+      - "127.0.0.1:9000:9000"  # Native protocol
+    
+    # Environment
+    environment:
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+      - CLICKHOUSE_DB=procurement
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=default
+    
+    # Volume for data persistence
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./docker/clickhouse/config.xml:/etc/clickhouse-server/config.d/custom-config.xml:ro
+    
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    
+    # Network
+    networks:
+      - procurement-network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # API service - Kazakhstan Procurement AI Agent
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    image: procurement-api:1.0.0
+    container_name: procurement-api
+    restart: unless-stopped
+    
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    
+    ports:
+      - "127.0.0.1:8000:8000"
+    
+    environment:
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=9000
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=default
+      - CLICKHOUSE_DB=procurement
+    
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    
+    networks:
+      - procurement-network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: procurement-qdrant
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6333:6333"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - procurement-network
+
+volumes:
+  clickhouse-data:
+    driver: local
+  qdrant-data:
+    driver: local
+
+networks:
+  procurement-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1500
